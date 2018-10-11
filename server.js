@@ -3,7 +3,7 @@ const Koa=require('koa');
 const staticCache=require('koa-static-cache');
 const body=require('koa-better-body');
 const convert=require('koa-convert');
-const mysql=require('mysql-pro');
+const Mysql=require('mysql-pro');
 const session=require('koa-session');
 const config=require('./config');
 const Router=require('koa-router');
@@ -12,6 +12,34 @@ const pathLib=require('path');
 
 let server=new Koa();
 server.listen(config.port)
+//连接数据库
+const db=new Mysql({
+    mysql:{
+      host:config.db_host,
+      port:config.db_port,
+      user: config.db_user,
+      password:config.db_password,
+      database:config.db_database
+    }
+  })
+db.execute=async (sql)=>{
+    await db.startTransaction();   
+    let res;
+    if(typeof sql=='string'){
+        res=await db.executeTransaction(sql);  
+    }else{
+        sql.forEach(async item => {
+            res=await db.executeTransaction(item);  
+        });
+    }
+     
+    await db.stopTransaction();  
+    return res; 
+}
+server.use(async (ctx,next)=>{
+    ctx.db=db;
+    await next();
+})
 
 //POST
 server.use(convert(body({
