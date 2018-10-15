@@ -1,10 +1,41 @@
 const Router=require('koa-router');
 let router=new Router();
 router.get('',async ctx=>{
-   let data=await ctx.db.execute(`SELECT * FROM question_table`);
-   await ctx.render('list',{});
+   let page=1;
+   let page_size=8; 
+   let questions=await ctx.db.execute(`
+     SELECT Q.ID,Q.title,ANSWER.content AS best_answer_content,AUTHOR.name,AUTHOR.headline FROM 
+
+     question_table AS Q
+     LEFT JOIN answer_table AS ANSWER ON Q.best_answer_ID=ANSWER.ID
+     LEFT JOIN author_table AS AUTHOR ON ANSWER.author_ID=AUTHOR.ID
+     LIMIT ${(page-1)*page_size},${page_size}
+   `);
+   
+   await ctx.render('list',{
+       questions
+   });
 })
 router.get('detail/:id',async ctx=>{
-    await ctx.render('item',{});
+    let {id}=ctx.params;
+    
+    let question=(await ctx.db.execute(`
+        SELECT * FROM question_table WHERE ID='${id}'
+    `))[0]
+    let answers=await ctx.db.execute(`
+        SELECT * FROM 
+        answer_table AS ANSWER 
+        LEFT JOIN  author_table AS AUTHOR ON ANSWER.author_ID=AUTHOR.id 
+        WHERE question_ID='${id}'
+    `)
+    let topics=await ctx.db.execute(`
+        SELECT * FROM topic_table WHERE ID in (${question.topics})
+    `)
+    console.log(topics)
+    await ctx.render('item',{
+        question,
+        answers,
+        topics
+    });
 })
 module.exports=router.routes();

@@ -1,0 +1,13 @@
+<script src="/js/jquery.min.js"></script>
+<script>
+    $(function(){
+        $('.read-more button').on('click',function(){
+            let $span=$(this).parent().find('span');
+            $span.html($span.attr('title'));
+            $(this).parent().parent()[0].className="RichContent";
+            $(this).remove();
+            
+        })
+    })
+
+</script>
