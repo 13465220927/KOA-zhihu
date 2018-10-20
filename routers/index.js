@@ -27,11 +27,13 @@ router.get('detail/:id',async ctx=>{
         answer_table AS ANSWER 
         LEFT JOIN  author_table AS AUTHOR ON ANSWER.author_ID=AUTHOR.id 
         WHERE question_ID='${id}'
-    `)
+    `);
+    question.best_answer=answers[0];
+    console.log(question.best_answer.name)
+    answers.splice(0,1);
     let topics=await ctx.db.execute(`
         SELECT * FROM topic_table WHERE ID in (${question.topics})
     `)
-    console.log(topics)
     await ctx.render('item',{
         question,
         answers,
